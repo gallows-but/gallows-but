@@ -1,0 +1,1308 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+	<meta content="yes" name="apple-mobile-web-app-capable"/>
+	<meta content="yes" name="apple-touch-fullscreen"/>
+	<meta content="black" name="apple-mobile-web-app-status-bar-style">
+	<meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0,minimum-scale=1.0, user-scalable=no" name="viewport">
+	<title>在线制作</title>
+	<style type="text/css">
+		*{
+			padding: 0;
+			margin: 0;
+			-moz-box-sizing: border-box;
+			-webkit-box-sizing: border-box;
+			box-sizing: border-box;
+		}
+		html,body{
+			width: 100%;
+			height: 100%;
+			margin:0;
+			padding:0;
+		}
+		.view{
+			position: relative;
+			width: 100%;
+			height: 100%;
+			background: #000019;
+		}
+		.box{
+			width: 100%;
+			height: 80%;
+			text-align: center;
+		}
+		#cas{
+		}
+		.btn-next{
+			color: #fff;
+			background:#3F35D6;
+			padding: 10px 15px;
+			font-size: 14px;
+			font-weight: bold;
+			border-radius:4px;
+			margin:15px auto;
+			width:90%;
+			text-align:center;
+		}
+		.btn-retry{
+			background:#282828;
+		}
+		textarea::-webkit-scrollbar{display:none;width:0px;height:0px;}textarea::-webkit-scrollbar-corner {display:none;width:0px;height:0px; }textarea::-webkit-resizer{display:none;}
+	</style>
+	<script>
+		function getParamsFromUrl(a){var query = window.location.search.substring(1);var vars = query.split("&");for(var i=0;i<vars.length;i++) {var pair = vars[i].split("=");if(pair[0] == a){return pair[1];}}return(false);};
+		String.prototype.replaceAll = function(s1,s2){ 
+			return this.replace(new RegExp(s1, "gm"), s2);
+		}
+		var tpl_id = '1126';
+		var w = '1126';
+		var track = '32.002.lv';
+		
+		var plat = '32.002.lv';
+	</script>
+</head>
+<body>
+<div class="view">
+	<div class="box" id="bb" style="position:relative;z-index:100;">
+		<div id="header-top" class="header-top" style="height:45px;" style="position:relative;top:0;left:0;pointer-events:none;">
+			<a href="../index.html"><img id="goback"  src="https://zqmodule.oss-cn-hangzhou.aliyuncs.com/xiexinbao/images/goback_ffffff.png" style="pointer-events:auto;position:fixed;top:12px;left:15px;z-index:1000;width:23px;cursor:pointer;" /></a>
+			<a href="../txb/order/my.html" style="border-top-left-radius: 5px;border-bottom-left-radius: 5px;height: 20px;line-height: 18px;padding: 0 1px 0 3px;border: 1px solid rgb(255,255,255,0.1);background-color: rgb(255,255,255,0.1);position:fixed;top:8px;right:0px;z-index:1000;cursor:pointer;font-size:12px;color:#fff;text-decoration:none;">我的订单</a>
+		</div>
+		<canvas id="cas" width="1024" height="1024" style="z-index:4"></canvas>
+	</div>
+	<div class="box-center"></div>
+	<div class="bottom-btns" style="position:fixed;z-index:2000;bottom:10px;left:0;width:100%;" onclick="ak.createImage()">
+		<div class="btn-next"  style="">生成照片</div>
+	</div>
+</div>
+<script charset="utf-8">
+	var ak = {scale:1,selected_id:0};
+	ak.set16ToRgba = function(str,a){var reg = /^#([0-9A-Fa-f]{3}|[0-9A-Fa-f]{6})$/;if(!reg.test(str)){return;}let newStr = (str.toLowerCase()).replace(/\#/g,'');let len = newStr.length;if(len == 3){let t = '';for(var i=0;i<len;i++){t += newStr.slice(i,i+1).concat(newStr.slice(i,i+1));}newStr = t;}let arr = [];for(var i =0;i<6;i=i+2){let s = newStr.slice(i,i+2);arr.push(parseInt("0x" + s));}return 'rgba('+ arr.join(",")+','+a+')';}
+	ak.getImageCanvas = function(img,W,H,rgb){
+		if(!ak.imageCanvas) {
+			ak.imageCanvas = document.createElement('canvas');
+		}
+		var context = ak.imageCanvas.getContext('2d');
+		ak.imageCanvas.width = W;
+		ak.imageCanvas.height = H;
+		context.drawImage(img,0,0,W,H);
+		var imgData = context.getImageData(0, 0, W, H);
+		
+		ak.changeImgColor(imgData,rgb);
+		context.putImageData(imgData,0,0);
+		return ak.imageCanvas;
+	}
+	ak.getRandomNum = function(){
+		return (Math.random() * 0xFF << 0);
+	}
+	ak.changeImgColor = function(imgData,rgb) {
+		for(let i = 0; i < imgData.data.length; i++) {
+		  let base = i * 4;
+		  let r = imgData.data[base];
+		  imgData.data[base] = rgb[0];
+		  imgData.data[base + 1] = rgb[1];
+		  imgData.data[base + 2] = rgb[2];
+		  imgData.data[base + 3] = (r==0?r:255);
+		}
+	}
+	ak.getRandomColor = function() {
+		var randColor = (Math.random() * 0xFFFFFF << 0).toString(16);
+		while (randColor.length < 6) {
+			randColor = "0" + randColor;
+		}
+		return "#" + randColor;
+	}
+	ak.getParamsFromUrl = function(a){var query = window.location.search.substring(1);var vars = query.split("&");for(var i=0;i<vars.length;i++) {var pair = vars[i].split("=");if(pair[0] == a){return pair[1];}}return(false);};
+	ak.getData = function(id){
+		for(var i=0;i<ak.data.length;i++){
+			if(ak.data[i].id==id){
+				return ak.data[i];
+			}
+		}
+		return ;
+	};
+	ak.base64toBlob = function(base64) {
+		var arr = base64.split(','),
+        mime = arr[0].match(/:(.*?);/)[1],
+        bstr = atob(arr[1]),
+        n = bstr.length,
+        u8arr = new Uint8Array(n);
+		while (n--) {
+			u8arr[n] = bstr.charCodeAt(n);
+		}
+		return new Blob([u8arr], { type: mime });
+    }
+	ak.blobToFile = function(theBlob, fileName){
+       theBlob.lastModifiedDate = new Date();  // 文件最后的修改日期
+       theBlob.name = fileName;                // 文件名
+       return new File([theBlob], fileName, {type: theBlob.type, lastModified: Date.now()});
+    }
+	ak.fileToBase64 = function(file,callback){
+		let reader = new FileReader();
+		reader.addEventListener('load',function(e){
+			const base64Image = e.target.result;
+			callback && callback(base64Image);
+			reader = null;
+		})
+		// 读取文件内容
+		reader.readAsDataURL(file);
+	}
+	ak.base64toFile = function(base64) {
+		var blob = ak.base64toBlob(base64);
+		return ak.blobToFile(blob,(new Date).getTime()+'.'+blob.type.replace('image/',''));
+    }
+	
+	ak.compress = function(base64Image,callback) {
+		let maxW = 1920;
+		let maxH = 1920;
+		const image = new Image();
+		image.addEventListener('load',function(e){
+			let needCompress = false;//是否需要压缩
+			if(image.naturalWidth > image.naturalHeight && image.naturalWidth>maxW){
+				needCompress = true;
+				var ratio = image.naturalWidth / maxW;
+				maxH = image.naturalHeight / ratio
+			} 
+			if(image.naturalWidth <= image.naturalHeight && image.naturalHeight>maxH){
+				needCompress = true;
+				var ratio = image.naturalHeight / maxH;
+				maxW = image.naturalWidth / ratio;
+			}
+			if(!needCompress){
+				maxW = image.naturalWidth;
+				maxH = image.naturalHeight;
+			}
+			const canvas = document.createElement('canvas');
+			canvas.setAttribute('id','__compress__');
+			canvas.width = maxW;
+			canvas.height = maxH;
+			canvas.style.visibility = 'hidden';
+			document.body.appendChild(canvas);
+
+			const ctx = canvas.getContext('2d');
+			ctx.clearRect(0,0,maxW,maxH);
+			ctx.drawImage(image,0,0,maxW,maxH);
+			const compressImage = canvas.toDataURL('image/jpeg',1);
+			callback && callback(compressImage);
+			canvas.remove();
+		});
+		image.src = base64Image;
+	}
+	ak.http_get = function(req){
+		return new Promise((resolve, reject) => {
+			var xhr = new XMLHttpRequest();
+			xhr.ontimeout = function(e) {xhr.abort();};
+			xhr.onerror = function(e) {};
+			xhr.open("GET", req.url,true);
+			xhr.onreadystatechange = function() {
+				if (xhr.readyState == 4) {
+					resolve(xhr.responseText);
+				}
+			};
+			xhr.timeout = 10*1000;
+			xhr.send();
+		});
+	}
+	function today (fmt){
+		var date = new Date();
+		var o = {"M+": date.getMonth() + 1,"d+": date.getDate()};
+		if (/(y+)/.test(fmt))
+			fmt = fmt.replace(RegExp.$1, (date.getFullYear() + "").substr(4 - RegExp.$1.length));
+		for (var k in o)
+			if (new RegExp("(" + k + ")").test(fmt)) fmt = fmt.replace(RegExp.$1, (RegExp.$1.length == 1) ? (o[k]) : (("00" + o[k]).substr(("" + o[k]).length)));
+		return fmt;
+	}
+	ak.image_upload_base64_2 = function(base64,callback){
+		if(cswtj){cswtj.log({a:'uploadImg2',d:'图片重传'});}
+	
+		var server_url = location.protocol.indexOf('https')>-1?'https://www.xiexinbao.com/image/upload':'http://www.xiexinbao.com/image/upload';
+		let formData = new FormData(); 
+		var blob = ak.base64toBlob(base64);
+		var file = ak.blobToFile(blob,(new Date).getTime()+'.png');
+		formData.append('file', file, file.name);
+		var xhr = new XMLHttpRequest();
+		xhr.ontimeout = function(e) {xhr.abort();};
+		xhr.onerror = function(e) {};
+		xhr.open("POST", server_url,true);
+		xhr.onreadystatechange = function() {
+			if(xhr.readyState == 4) {
+				var img_url = JSON.parse(xhr.responseText).url;
+				callback(img_url);
+			}
+		};
+		xhr.timeout = 60*1000;
+		xhr.send(formData);
+	}
+	ak.image_upload_base64 = async function(base64,callback){
+		var new_base64 = base64;
+		try {
+			var arr = base64.split(','),
+			mime = arr[0].match(/:(.*?);/)[1],
+			bstr = atob(arr[1]),
+			n = bstr.length,
+			u8arr = new Uint8Array(n);
+			while (n--) {
+				u8arr[n] = bstr.charCodeAt(n);
+			}
+			var _mine = mime.indexOf('png')>-1?'png':'jpeg';			
+			var oss = JSON.parse(await ak.http_get({url:(window.location.protocol.indexOf('https')>-1?'https:':'http:')+'//www.xiexinbao.com/oss3/params?mime='+_mine}));
+		
+			const request = new XMLHttpRequest();
+			request.onreadystatechange = function () { 
+				if(request.readyState === 4) {
+					var img_url  =  (window.location.protocol.indexOf('https')>-1?'https:':'http:')+'//xiexinmao.oss-cn-shanghai.aliyuncs.com'+oss.filename;
+					callback(img_url);
+				}
+			}
+			request.ontimeout = function(e) {
+				if(cswtj){cswtj.log({a:'uploadImgTimeout',d:'传图超时'});}
+				ak.image_upload_base64_2(base64,callback);
+			};
+			request.onerror= function(e) {
+				//popToast({title:'onerror',timeout:60*1000})
+				if(cswtj){cswtj.log({a:'uploadImgError',d:'传图失败'});}
+				ak.image_upload_base64_2(base64,callback);
+			};
+			request.open('PUT', (window.location.protocol.indexOf('https')>-1?'https:':'http:')+'//xiexinmao.oss-cn-shanghai.aliyuncs.com'+oss.filename);
+			request.setRequestHeader('authorization',oss.authorization);
+			request.setRequestHeader('Content-Type',mime);//关键步骤
+			request.setRequestHeader('x-oss-date',oss.date);//关键步骤
+			request.timeout = 60*1000;
+			request.send(u8arr);
+		}catch(e){
+			if(cswtj){cswtj.log({a:'uploadImgCatch',d:'传图异常'});}
+			ak.image_upload_base64_2(base64,callback);
+		}
+	}/*
+	ak.image_upload_base64 = async function(base64,callback){
+		var params_json = await ak.http_get({url:'http://www.xiexinbao.com/oss2/params'});
+		
+		var ymd = today('yyyyMMdd');
+		var file_path = 'txb/user_img/'+ymd;
+		var file_name = (new Date).getTime()+'_'+(Math.floor(Math.random()*(1999-1000+1))+1000)+'.png';
+		//var file_name = (new Date).getTime()+'.png';
+		
+		var blob = ak.base64toBlob(base64);
+		var file = ak.blobToFile(blob,file_name);
+		
+		var params = JSON.parse(params_json);
+		params.name = file_name;
+		params.key = file_path+'/${filename}';
+		params.file = file;
+		
+		let formData = new FormData(); 
+		var keys = Object.keys(params);
+		for(var i=0;i<keys.length;i++){
+			var key = keys[i];
+			formData.append(key, params[key]);
+		}
+		var xhr = new XMLHttpRequest();
+		xhr.ontimeout = function(e) {;xhr.abort();};
+		xhr.onerror = function(e) {};
+		xhr.open("POST",'http://xiexinmao.oss-cn-shanghai.aliyuncs.com');
+		xhr.onreadystatechange = function() {
+			if(xhr.readyState == 4) {
+				var img_url  = 'http://xiexinmao.oss-cn-shanghai.aliyuncs.com/'+file_path+'/'+file_name;
+				callback(img_url);
+			}
+		};
+		xhr.timeout = 60*1000;
+		xhr.send(formData);
+	}
+	
+	*/
+	
+	
+	ak.image_filter = {
+		yuantu : function(img_url,callback){
+			callback(img_url);
+		},
+		koutu : function(img_url,callback){
+			var xhr = new XMLHttpRequest();
+			xhr.ontimeout = function(e) {xhr.abort();callback(img_url)};
+			xhr.onerror = function(e) {callback(img_url)};
+			xhr.open("GET", 'http://koutu.xiexinbao.com/koutu2?img_url='+img_url,true);
+			xhr.onreadystatechange = function() {
+				if (xhr.readyState == 4) {
+					var img_url = JSON.parse(xhr.responseText).url;
+					callback(img_url);
+				}
+			};
+			xhr.timeout = 15*1000;
+			xhr.send();
+		}
+	};
+	
+	
+	ak.createImage =function() {
+		//判断照片是否更改
+		var mustKeys = Object.keys(mustChange);
+		for(var i=0;i<mustKeys.length;i++){
+			var key = mustKeys[i];
+			for(var j=0;j<ak.data.length;j++){
+				var _data = ak.data[j];
+				if(key==_data.id && mustChange[key] == _data.value){
+					if(_data.type=='img') {
+						popHtml({
+							title:'提示',
+							align:'center',
+							content:'<div style="text-align:center;margin:5px 0 25px;">请先上传照片，再点击生成照片</div>',
+							button:{text:'上传照片',click:function(e){
+								popClose();
+								var box_changeImg = document.querySelector('#box-'+_data.id+'-changeImg');
+								if(box_changeImg){
+									box_changeImg.click();
+								}
+							}}
+						});
+					} else {
+						popHtml({
+							title:'提示',
+							align:'center',
+							content:'<div style="text-align:center;margin:5px 0 25px;">请修改文字后，再生成照片</div>',
+							button:{text:'修改文字',click:function(e){
+								popClose();
+								var box_changeText = document.querySelector('#box-'+_data.id+'-changeText');
+								if(box_changeText){
+									box_changeText.click();
+								}
+							}}
+						});
+					}
+					return ;
+				}
+			}
+		}
+		
+		var imgBase64 = ak.canvas.toDataURL("image/jpeg",1);
+		var img_url = imgBase64;
+		popToast({title:'生成中...',icon:'loading',timeout:60*1000});
+		downloadFile(imgBase64,'data:image/png;base64,iVBORw0KGg....')
+		// ak.image_upload_base64(imgBase64,function(url){
+		// 	img_url = url;
+		// 	http_post({url:'http://www.xiexinbao.com/txb/order/check ',data:{goods_id:tpl_id,user_id:cswtj.id},callback:function(res){
+		// 		var goods_payed = JSON.parse(res)
+		// 		if(getParamsFromUrl('order_id') || goods_payed.count){//创建订单
+		// 			closeToast();
+		// 			html = '<div style="text-align:center;margin:10px;font-size:14px;color:red;">长按照片，即可保存相册</div>';
+		// 			html += '<img src="'+img_url+'" style="width:100%;" />';
+		// 			popHtml({title:'',align:'center',content:html});
+		// 			http_post({url:'http://www.xiexinbao.com/txb/order/set/data_out',data:{id:getParamsFromUrl('order_id'),data_in:bztpl,data_out:img_url},callback:function(res){}});
+		// 		} else {
+		// 			var order_id = (new Date).getTime();
+		// 			var order = {
+		// 				id:order_id,
+		// 				user_id:cswtj.id,
+		// 				goods_id:bztpl.id,
+		// 				goods_img:bztpl.poster,
+		// 				title:bztpl.title,
+		// 				price:bztpl.price||9.9,
+		// 				data_in:bztpl,
+		// 				data_out:img_url,
+		// 				track:track,
+		// 				tag:bztpl.tag||'',
+		// 				tag2:bztpl.tag2||'',
+		// 				callback:'http://www.xiexinbao.com/txb/download/img?order_id='+order_id
+		// 			};
+					
+		// 			var pay_url = '';
+		// 			var pay_tips = '支付'+(bztpl.price||9.9)+'元，即可下载照片！';
+		// 			if(navigator.userAgent.toLowerCase().indexOf('micromessenger') != -1) {
+		// 				pay_url = 'http://www.xiexinbao.com/txb/order/wxh5pay?order_id='+order_id;
+		// 			} else {
+		// 				pay_tips = '支付'+(bztpl.price||9.9)+'元，即可下载照片！<br><span style="font-size:12px;color:red;">付款后，请返回浏览器下载图片</span><br><span style="font-size:12px;color:red;">购买的模板，可以免费重新修改</span>';
+		// 				pay_url = 'http://www.xiexinbao.com/txb/order/alipay?order_id='+order_id;
+		// 			}
+					
+		// 			http_post({url:'http://www.xiexinbao.com/txb/order/create',data:order,callback:function(res){
+		// 				cswtj.log({a:'createOrder',d:'创建订单'});
+		// 				closeToast();
+		// 				popHtml({
+		// 					title:'生成成功',
+		// 					align:'center',
+		// 					content:'<div style="text-align:center;margin:5px 0 25px;">'+pay_tips+'</div>',
+		// 					button:{text:'去支付',url:pay_url,click:function(e){
+		// 						cswtj.log({a:'clickPay',d:'去支付'});
+		// 					}}
+		// 				});
+		// 			}});
+		// 		}
+		// 	}});	
+		// });
+		cswtj.log({a:'createImg',d:'生成照片'});
+	};
+
+	ak.afterImgUpload = null;
+	ak.successImgUpload = null;
+	
+	/*****
+	
+	****/
+	ak.element_box_init = function(element_data){
+		var box = document.createElement('div');
+		box.className = 'box';
+		box.id = 'box-'+element_data.id;
+		box.style = 'user-select: none;position: absolute; left: 0px; top: 0px; width: 0; height: 0; z-index: '+(1001+element_data['z-index'])+'; border:2px dashed #fe2c55; display: none;transform-origin: 50% 50%;transform:rotate(0deg);background-color: transparent;';
+		var html = "";
+		
+		if(element_data.type=='img') {
+			//换图
+			element_data['edit_btn_pos'] = element_data['edit_btn_pos']?element_data['edit_btn_pos']:"bottom_center";
+			if(element_data['edit_btn_pos'] == "top_center") {
+				html += '<div id="box-'+element_data.id+'-changeImg" style="user-select: none;-webkit-touch-callout: none;color:#fff;font-size:12px;position: absolute;top: -13px;left: 50%; display: inline-block;width: 46px;height: 26px;background:#fe2c55;line-height: 26px;text-align: center;border-radius: 6px;transform:translateX(-50%)  scale(0.8);z-index:1005;pointer-events: auto;">换照片</div>';
+			}
+			if(element_data['edit_btn_pos'] == "right_center") {
+				html += '<div id="box-'+element_data.id+'-changeImg" style="padding:3px 0;user-select: none;-webkit-touch-callout: none;color:#fff;font-size:12px;position: absolute;top: 50%;right: -18px; display: inline-block;width:20px;height:auto;background:#fe2c55;line-height:18px;text-align: center;border-top-left-radius: 4px;border-bottom-left-radius: 4px;transform:translateY(-50%)  scale(0.8);z-index:1005;pointer-events: auto;">换照片</div>';
+			}
+						
+			if(element_data['edit_btn_pos'] == "bottom_center") {
+				html += '<div id="box-'+element_data.id+'-changeImg" style="user-select: none;-webkit-touch-callout: none;color:#fff;font-size:12px;position: absolute;bottom: -13px;left: 50%; display: inline-block;width: 46px;height: 26px;background:#fe2c55;line-height: 26px;text-align: center;border-radius: 6px;transform:translateX(-50%)  scale(0.8);z-index:1005;pointer-events: auto;">换照片</div>';
+			}
+			if(element_data['edit_btn_pos'] == "left_center") {
+				html += '<div id="box-'+element_data.id+'-changeImg" style="padding:3px 0;user-select: none;-webkit-touch-callout: none;color:#fff;font-size:12px;position: absolute;top: 50%;left: -18px; display: inline-block;width:20px;height:auto;background:#fe2c55;line-height:18px;text-align: center;border-top-left-radius: 4px;border-bottom-left-radius: 4px;transform:translateY(-50%)  scale(0.8);z-index:1005;pointer-events: auto;">换照片</div>';
+			}
+		} 
+		if(element_data.type=='img') {
+		//旋转
+			html += "<div id='box-"+element_data.id+"-rotate' style='-webkit-touch-callout: none;padding: 3px;   background-color: rgb(255, 255, 255);pointer-events: auto;position: absolute;width: 20px;height: 20px;bottom: -10px;display:inline-block;right: -10px;z-index:1005;background-repeat:no-repeat; border-radius: 5px;background-position: center;background-image:url(https://caipiao88.oss-cn-hangzhou.aliyuncs.com/clip/suo2.png)'> </div>";
+		} 
+		
+		if(element_data.type=='text') {
+			//改字
+			element_data['edit_btn_pos'] = element_data['edit_btn_pos']?element_data['edit_btn_pos']:"bottom_center";
+		
+			if(element_data['edit_btn_pos'] == "top_right") {
+				html += '<div id="box-'+element_data.id+'-changeText" style="user-select: none;-webkit-touch-callout: none;color:#fff;font-size:12px;position: absolute;top: -12px;right: -23px; display: inline-block;width: 32px;height: 20px;background:#fe2c55;line-height: 20px;text-align: center;border-radius:3px;transform:  scale(0.8);z-index:1005;pointer-events: auto;">改字</div>';
+			}
+			
+			if(element_data['edit_btn_pos'] == "top_center") {
+				html += '<div id="box-'+element_data.id+'-changeText" style="user-select: none;-webkit-touch-callout: none;color:#fff;font-size:12px;position: absolute;top: -13px;left: 50%; display: inline-block;width: 46px;height: 26px;background:#fe2c55;line-height: 26px;text-align: center;border-radius: 6px;transform:translateX(-50%)  scale(0.8);z-index:1005;pointer-events: auto;">改字</div>';
+			}
+			if(element_data['edit_btn_pos'] == "right_center") {
+				html += '<div id="box-'+element_data.id+'-changeText" style="padding:3px 0;user-select: none;-webkit-touch-callout: none;color:#fff;font-size:12px;position: absolute;top: 50%;right: -18px; display: inline-block;width:20px;height:auto;background:#fe2c55;line-height:18px;text-align: center;border-top-left-radius: 4px;border-bottom-left-radius: 4px;transform:translateY(-50%)  scale(0.8);z-index:1005;pointer-events: auto;">改字</div>';
+			}
+						
+			if(element_data['edit_btn_pos'] == "bottom_center") {
+				html += '<div id="box-'+element_data.id+'-changeText" style="user-select: none;-webkit-touch-callout: none;color:#fff;font-size:12px;position: absolute;bottom: -13px;left: 50%; display: inline-block;width: 46px;height: 26px;background:#fe2c55;line-height: 26px;text-align: center;border-radius: 6px;transform:translateX(-50%)  scale(0.8);z-index:1005;pointer-events: auto;">改字</div>';
+			}
+			if(element_data['edit_btn_pos'] == "left_center") {
+				html += '<div id="box-'+element_data.id+'-changeText" style="padding:3px 0;user-select: none;-webkit-touch-callout: none;color:#fff;font-size:12px;position: absolute;top: 50%;left: -18px; display: inline-block;width:20px;height:auto;background:#fe2c55;line-height:18px;text-align: center;border-top-left-radius: 4px;border-bottom-left-radius: 4px;transform:translateY(-50%)  scale(0.8);z-index:1005;pointer-events: auto;">改字</div>';
+			}
+		}
+		box.innerHTML = html;
+		document.querySelector('.box').appendChild(box);
+		
+		box.addEventListener("touchstart", function () {
+			if (event.srcElement.id !== box.id) { return }
+			event.stopPropagation();
+			var touch_length = event.touches.length;
+			if (touch_length === 1) {
+				ak.can_single = true;
+				ak.beforePos = ak.pointsToCanvas(event.touches[0].clientX,event.touches[0].clientY);
+			} 
+			if (touch_length === 2) {
+				ak.can_single = false;
+				ak.start = event.touches;
+				ak.start_x = parseInt(element_data.left);
+				ak.start_y = parseInt(element_data.top);
+				ak.start_width = parseInt(element_data.width);
+				ak.start_height = parseInt(element_data.height);
+				ak.start_rotate = parseFloat(element_data.rotate);
+			}
+		}, true);
+		box.addEventListener("touchmove", function () {
+			if (event.srcElement.id !== box.id) { return }
+			event.preventDefault();
+			var touch_length = event.touches.length;
+			if (touch_length === 1 && ak.can_single) {
+				ak.afterPos = ak.pointsToCanvas(event.touches[0].clientX, event.touches[0].clientY);
+				const x = ak.afterPos.x - ak.beforePos.x;
+				const y = ak.afterPos.y - ak.beforePos.y;
+				
+				ak.beforePos = JSON.parse(JSON.stringify(ak.afterPos));
+				element_data.left = (element_data.left + x);
+				element_data.top = (element_data.top + y);
+				
+				renderALLImg();
+			}
+			if(touch_length === 2){
+				ak.can_single = false;
+				var now = event.touches;
+				var scale = ak.getDistance2(now[0], now[1]) / ak.getDistance2(ak.start[0], ak.start[1]);
+				var newRotate = ak.getAngle(now[0], now[1]) - ak.getAngle(ak.start[0], ak.start[1]);
+				element_data.left =  ak.start_x - ak.start_width * (scale - 1) / 2 ;  
+				element_data.top = ak.start_y - ak.start_height * (scale - 1) / 2 ;
+				element_data.width = ak.start_width*scale;
+				element_data.height = ak.start_height*scale;
+				element_data.rotate =  ak.start_rotate + newRotate;
+	
+				renderALLImg();
+			}
+		}, true);
+		
+		box.addEventListener("touchend", function () {
+			if (event.srcElement.id !== box.id) { return }
+			ak.can_single = false;
+			//log('touchend:'+event.touches.length);
+		}, true);
+		
+		
+		
+		//绑定点击事件
+		
+		box.box_changeImg = document.querySelector('#box-'+element_data.id+'-changeImg');
+		if (box.box_changeImg) {
+			box.box_changeImg.onclick = function () {
+				event.stopPropagation();
+				let input = document.createElement("input");
+				input.type = "file";
+				input.accept = "image/*";
+				input.style.display = "none";
+				input.onchange = function () {
+					var _input = this;
+					if(ak.afterImgUpload){
+						ak.afterImgUpload();
+					}
+					popToast({title:'正在上传...',icon:'loading',timeout:60*1000});
+					ak.fileToBase64(_input.files[0],function(base64Image){
+						ak.compress(base64Image,function(base64){							
+							ak.image_upload_base64(base64,function(img_url){//先上传,再滤镜
+								ak.image_filter[element_data.imgFilter](img_url,async function(img_url){
+									element_data.value = img_url;
+									await loadImg(element_data);
+									closeToast();
+									renderALLImg();
+									if(ak.successImgUpload){
+										ak.successImgUpload();
+									}
+								});	
+							});	
+						})
+					});
+					document.body.removeChild(_input);					
+				};
+				document.body.appendChild(input);
+				setTimeout(function(){input.click();},100);
+			}
+		}
+		
+		box.box_changeText = document.querySelector('#box-'+element_data.id+'-changeText');
+		if (box.box_changeText) {
+			box.box_changeText.onclick = function () {
+				var value = element_data.value;
+				popHtml({
+					title:'修改内容',
+					align:'center',
+					content:'<div style="text-align:center;margin:5px 0 15px;"><textarea id="text_box_input" rows="'+element_data.value.split('\n').length+'"  placeholder="点击输入文字" maxlength="-1" style="padding: 8px 10px;width:100%;caret-color:#EE4468;outline-width: 0;border:none;line-height:18px;font-size:12px;flex:1;background:#f3f3f3;color:#000;border-radius:4px;">'+value+'</textarea></div>',
+					button:{text:'确定保存',click:function(){
+						var value = document.querySelector('#text_box_input').value;
+						element_data.value = value;
+						//重新生成文字图片&重新渲染
+						http_post({url:'http://canvas.xiexinbao.com/font2img',data:element_data,callback: async function(result){
+							var font = JSON.parse(result);
+							element_data.width = font.width;
+							element_data.height = font.height;
+							element_data['font-img'] = font['font-img'];
+							await loadImg(element_data);
+							renderALLImg();
+							popClose();
+						}});
+					}}
+				});
+			}
+		}
+		
+		/*旋转按钮*/
+		box.box_rotate = document.querySelector('#box-'+element_data.id+'-rotate');
+		if (box.box_rotate) {
+			box.box_rotate.onclick = function(){}
+			box.box_rotate.addEventListener('touchstart', function () {
+				if (event.srcElement.id !== 'box-'+element_data.id+'-rotate') { return }
+				event.stopPropagation();
+				ak.can_single = false;
+				
+				
+				ak.start = event.touches;
+				ak.start_x = element_data.left;
+				ak.start_y = element_data.top;
+				ak.start_width = element_data.width;
+				ak.start_height = element_data.height;
+				ak.c = {x:ak.start_x+ak.start_width/2,y:ak.start_y+ak.start_height/2};
+				ak.start_rotate = parseFloat(element_data.rotate);
+			}, true);
+			box.box_rotate.addEventListener('touchmove', function () {
+				if (event.srcElement.id !== 'box-'+element_data.id+'-rotate') { return }
+				event.preventDefault();
+				
+			
+				var start =  ak.pointsToCanvas(ak.start[0].clientX,ak.start[0].clientY);
+				var now = ak.pointsToCanvas(event.touches[0].clientX,event.touches[0].clientY);
+				
+				var start_dis = Math.sqrt(Math.pow(start.x-ak.c.x,2)+Math.pow(start.y-ak.c.y,2));
+				var now_dis = Math.sqrt(Math.pow(now.x-ak.c.x,2)+Math.pow(now.y-ak.c.y,2));
+				
+				
+				var new_width = Math.sqrt(4*now_dis*now_dis *(ak.start_width*ak.start_width) / (ak.start_height*ak.start_height+ak.start_width*ak.start_width));
+				var new_height = new_width * ak.start_height / ak.start_width;
+				var new_left = ak.start_x - (new_width-ak.start_width)/2;
+				var new_top = ak.start_y - (new_height-ak.start_height)/2;
+				
+				var angle = ak.getAngleCenter({x:start.x,y:start.y},{x:now.x,y:now.y},{x:ak.start_x + ak.start_width / 2,y:ak.start_y + ak.start_height / 2});
+				var rotate = 0;
+				if (now.x - start.x > 0) {
+					// 顺时针旋转
+					var deg = ak.start_rotate + angle;
+					rotate = deg > 360 ? deg - 360 : deg;
+				} else {
+					// 逆时针旋转
+					angle = 360 - angle;
+					var  deg = ak.start_rotate - angle;
+					rotate = deg < 0 ? deg + 360 : deg;
+				}
+				element_data.rotate = rotate;
+				
+				element_data.left =  new_left;  
+				element_data.top = new_top;
+				element_data.width = new_width;
+				element_data.height = new_height;
+				
+				
+				renderALLImg();
+			}, true);
+			box.box_rotate.addEventListener('touchend', function () {
+				if (event.srcElement.id !== 'box-'+element_data.id+'-rotate') { return; }
+			}, true);
+		}
+	};
+	ak.box_render = function(){
+		const canvas_box = ak.canvas.getBoundingClientRect();
+		
+		for(var i=0;i<ak.data.length;i++){
+			if(ak.data[i].canEdit =='ok'){
+				var element_data = ak.data[i];
+				//鏍规嵁element_json ==銆嬪垹闄ゆ寜閽€佺缉鏀炬寜閽€佺Щ鍔ㄦ寜閽€佺紪杈戞寜閽�
+				var box = document.getElementById("box-"+element_data.id);
+				//document.getElementById('box-'+element_data.id+'-rotate').style.display ='inline-block';
+				
+				var box_padding = element_data.type=='text'?2:2;
+				if(parseInt(element_data.width)*ak.scale<100|| parseInt(element_data.height)*ak.scale<40){
+					//	box_padding = 20;
+				}
+				
+				
+				box.style.left = parseInt(element_data.left)*ak.scale - box_padding+canvas_box.left + 'px';
+				box.style.top = parseInt(element_data.top)*ak.scale  - box_padding +canvas_box.top + 'px';
+				box.style.width = parseInt(element_data.width)*ak.scale + box_padding*2 + 'px';
+				box.style.height = parseInt(element_data.height)*ak.scale + box_padding*2 + 'px';
+				box.style.transform = 'rotate('+parseFloat(element_data.rotate)+'deg)' ;	
+				box.style.display = 'block';
+			}
+		}
+	};
+	ak.isopt = false;
+	ak.can_single = false;
+	ak.init = function (){
+		ak.canvas = document.getElementById("cas");
+		ak.context =ak.canvas.getContext("2d");
+		
+		ak.canvas_mask = document.createElement('canvas');
+		ak.context_mask =ak.canvas_mask.getContext("2d");
+		
+		document.querySelector(".box").style.height = window.innerHeight*0.8 + 'px'; 
+		//document.querySelector(".bottom-btns").style.height = window.innerHeight*0.2 + 'px'; 
+	}
+	ak.getOrigin = function(first, second){
+		return {
+			x: (first.x + second.x) / 2,
+			y: (first.y + second.y) / 2
+		};	
+	}
+	ak.pointsToCanvas = function (x, y) {
+		const box = this.canvas.getBoundingClientRect();
+		
+		return {
+			x: (x - box.left)* ak.canvas.width/box.width,
+			y: (y - box.top) * ak.canvas.height/box.height
+		};
+    };
+	ak.getAngle =function (p1, p2) {
+		var p_1 =  ak.pointsToCanvas(p1.clientX,p1.clientY);
+		var p_2 =  ak.pointsToCanvas(p2.clientX,p2.clientY);
+	
+		var x = p_1.x - p_2.x,
+			y = p_1.y - p_2.y;
+			
+		return Math.round(Math.atan2(y, x) * 180 / Math.PI);
+	};
+		
+	ak.getAngleCenter =function (start,now,center) {
+		var x1 = start.x;
+		var y1 = start.y;
+		var x2 = now.x;
+		var y2 = now.y;
+		var cx = center.x;
+		var cy = center.y;
+		  //2个点之间的角度获取
+		  let c1 = Math.atan2(y1 - cy, x1 - cx) * 180 / (Math.PI);
+		  let c2 = Math.atan2(y2 - cy, x2 - cx) * 180 / (Math.PI);
+		  let angle;
+		  c1 = c1 <= -90 ? (360 + c1) : c1;
+		  c2 = c2 <= -90 ? (360 + c2) : c2;
+		  //夹角获取
+		  angle = Math.floor(c2 - c1);
+		  angle = angle < 0 ? angle + 360 : angle;
+		  return angle;
+	}
+	
+	ak.getDistance2 = function (p1, p2){
+		var p_1 =  ak.pointsToCanvas(p1.clientX,p1.clientY);
+		var p_2 =  ak.pointsToCanvas(p2.clientX,p2.clientY);
+		
+		var x = p_2.x - p_1.x,y = p_2.y - p_2.y;
+		return Math.sqrt((x * x) + (y * y));
+	}
+	ak.getDistance = function (p1, p2) {
+		var x = p2.clientX - p1.clientX,
+			y = p2.clientY - p1.clientY;
+		return Math.sqrt((x * x) + (y * y));
+	};
+	
+	ak.urltoImage = function (imgUrl) {
+		return new Promise((resolve, reject) => {
+			if(imgUrl.indexOf('https://')>-1){
+				imgUrl = imgUrl.replace('https://','http://');
+			}
+			const img = new Image();
+			if(imgUrl.indexOf('https://')>-1||imgUrl.indexOf('http://')>-1) {
+				img.setAttribute("crossOrigin", "Anonymous");
+			}
+			img.onload = () => resolve(img);
+			img.onerror = function(e){
+				var img_png = new Image();
+				img_png.src = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAGQAAABkCAYAAABw4pVUAAAAAXNSR0IArs4c6QAAAWVJREFUeF7t00ERAAAIhECvf2lr7AMTMODtOsrAKJpgriDYExSkIJgBDKeFFAQzgOG0kIJgBjCcFlIQzACG00IKghnAcFpIQTADGE4LKQhmAMNpIQXBDGA4LaQgmAEMp4UUBDOA4bSQgmAGMJwWUhDMAIbTQgqCGcBwWkhBMAMYTgspCGYAw2khBcEMYDgtpCCYAQynhRQEM4DhtJCCYAYwnBZSEMwAhtNCCoIZwHBaSEEwAxhOCykIZgDDaSEFwQxgOC2kIJgBDKeFFAQzgOG0kIJgBjCcFlIQzACG00IKghnAcFpIQTADGE4LKQhmAMNpIQXBDGA4LaQgmAEMp4UUBDOA4bSQgmAGMJwWUhDMAIbTQgqCGcBwWkhBMAMYTgspCGYAw2khBcEMYDgtpCCYAQynhRQEM4DhtJCCYAYwnBZSEMwAhtNCCoIZwHBaSEEwAxhOCykIZgDDaSEFwQxgOC0EC/KEzwBlGO+pQQAAAABJRU5ErkJggg==';
+				resolve(img_png);
+				//popToast({title:'加载图片失败onerror：'})
+			}
+			img.src = imgUrl;
+			/*
+			const img = new Image();
+			window.URL = window.URL || window.webkitURL;
+			
+			var xhr = new XMLHttpRequest();
+			xhr.open("get", imgUrl);
+			xhr.responseType = "blob";
+			xhr.onerror = function(e) {
+				popToast({title:'加载图片失败onerror：'})
+				reject();
+			};
+			xhr.onload = function () {
+				let blob = this.response;
+				img.src = window.URL.createObjectURL(blob);;
+				img.onload = function() {
+					resolve(img)
+				}
+			}
+			xhr.send();
+			*/
+		});
+	};
+	
+	
+	async function loadImg(element){
+		if(element.type=='img') {
+			element.image = await ak.urltoImage(element.value);
+			if(element['mask-image']){
+				element.image_mask = await ak.urltoImage(element['mask-image']);
+			}
+		} else {
+			element.image = await ak.urltoImage(element['font-img']);
+		}
+		if(element.type=='img') {
+			element.init_width = element.init_width?element.init_width:parseInt(element.width);
+			if(element.height!='auto') {
+				element.init_height=  element.init_height?element.init_height:parseInt(element.height);
+			} else {
+				element.init_height=  element.init_height?element.init_height:parseInt(parseInt(element.width) * element.image.height /element.image.width);
+			}
+			element.init_top =  element.init_top?element.init_top:parseInt(element.top);
+			element.init_left =  element.init_left?element.init_left:parseInt(element.left);
+			element.init_rotate = element.init_rotate?element.init_rotate:parseFloat(element.width);
+
+			//根据mask，尺寸，调整图片初始缩放比
+			if(element.image.height/element.image.width>=element.init_height/element.init_width){//宽对齐
+				element.width = element.init_width;
+				element.height = element.image.height*element.init_width/element.image.width;
+				element.left = element.init_left;
+				element.top = parseInt(element.init_top -(element.height-element.init_height)/2);
+			}else{//高对齐对齐
+				element.width = element.image.width*element.init_height/element.image.height;
+				element.height = element.init_height;
+				element.left = parseInt(element.init_left -(element.width-element.init_width)/2);
+				element.top = element.init_top;
+			}
+			
+			element.opacity = parseFloat(element.opacity);
+		} else {
+			element.width = parseInt(element.width);
+			element.height = parseInt(element.width) * element.image.height /element.image.width;
+		
+			element.left = parseInt(element.left);
+			element.top = parseInt(element.top);
+			element.rotate = parseFloat(element.rotate);
+			element.opacity = parseFloat(element.opacity);
+		}
+		return element.image;
+	}
+	
+	
+	function http_post(req){
+		var xhr = new XMLHttpRequest();
+		xhr.ontimeout = function(e) {xhr.abort();};
+		xhr.onerror = function(e) {};
+		xhr.open("POST", req.url,true);
+		xhr.onreadystatechange = function() {
+			if (xhr.readyState == 4) {
+				req.callback(xhr.responseText);	
+			}
+		};
+		xhr.timeout = 10*1000;
+		xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded; charset=UTF-8");
+		var post_data = [];
+		var postData = req.data;
+		postData = (function(value){
+			for(var key in value){
+				if(typeof(value[key]) == 'object'){
+					post_data.push(key+"="+encodeURIComponent(JSON.stringify(value[key])));
+				} else {
+					post_data.push(key+"="+encodeURIComponent(value[key]));
+				}
+			};
+			return post_data.join('&');
+		}(postData));
+		xhr.send(postData);
+	}
+	
+	
+	var mustChange = {};
+	var bztpl = {};
+	http_post({url:'http://www.xiexinbao.com/txb/tpl/item?id='+tpl_id,callback:async function(html){
+		ak.init();
+		bztpl = JSON.parse(html);
+		ak.canvas.width = bztpl.canvas_w;
+		ak.canvas.height = bztpl.canvas_h;
+		ak.canvas_mask.width = bztpl.canvas_w;
+		ak.canvas_mask.height = bztpl.canvas_h;
+		
+		var _scale = 1;
+		if(ak.canvas.height/ak.canvas.width>1.35 && ak.canvas.height/ak.canvas.width<=1.6){
+			_scale = 0.75;
+			document.querySelector('#header-top').style.position ='absolute';
+		}
+		if(ak.canvas.height/ak.canvas.width>1.6){
+			_scale = 0.65;
+			document.querySelector('#header-top').style.position ='absolute';
+		}
+		
+		ak.canvas.style.width = _scale*100+'%';
+		ak.canvas_mask.style.width = _scale*100+'%';
+		ak.scale = document.documentElement.clientWidth*_scale/(ak.canvas.width);
+		
+		var canvasBox = document.getElementById("bb");
+		ak.data = bztpl.elements;
+		ak.data.sort((a, b) => {//排序
+			a['z-index']= parseInt(a['z-index']);
+			b['z-index']=parseInt(b['z-index']);
+			return parseInt(a['z-index']) > parseInt(b['z-index']) ? 1 : -1;
+		});
+		for(var i=0;i<ak.data.length;i++){
+			if(ak.data[i].canEdit =='ok'){
+				ak.selected_id = ak.data[i].id;
+				ak.element_box_init(ak.data[i]);
+				
+				if(ak.data[i].mustChange && ak.data[i].mustChange=='ok' ){
+					mustChange[ak.data[i].id] = ak.data[i].value;
+				}
+			}
+		}
+		
+		renderALLImg();
+		
+		ak.afterImgUpload = function(){
+			cswtj.log({a:'uploadImg',d:'上传图片'});
+		}
+		ak.successImgUpload= function(){
+			cswtj.log({a:'uploadSuccess',d:'传图ok'});
+		}
+		
+	}});
+	
+	async function renderALLImg() {
+		ak.context.clearRect(0,0,ak.canvas.width,ak.canvas.height); // 绘制前先清除
+		for(var i=0;i<bztpl.elements.length;i++){
+			var element = bztpl.elements[i];
+			
+			if(element['mask-image']){
+				ak.context_mask.clearRect(0,0,ak.canvas_mask.width,ak.canvas_mask.height);
+				//canvas-mask上绘制mask-image
+				if(typeof element.image == 'undefined'){
+					await loadImg(element);
+				}
+				ak.context_mask.globalCompositeOperation = 'source-over';
+				ak.context_mask.drawImage(element.image_mask,0, 0);
+				
+				var image  = element.image;
+				ak.context_mask.translate(element.left+element.width/2,element.top+element.height/2);
+				ak.context_mask.rotate(parseFloat(element.rotate) * Math.PI / 180);
+				ak.context_mask.translate(-(element.left+element.width/2), -(element.top+element.height/2));
+				ak.context_mask.globalAlpha = element.opacity;
+				
+				
+				ak.context_mask.globalCompositeOperation = 'source-in';
+				
+				ak.context_mask.shadowOffsetX =0;
+				ak.context_mask.shadowOffsetY =0;
+				ak.context_mask.shadowBlur = 0;
+				
+				
+				
+				
+				if(element['type']=='img') {	
+					if((parseInt(element['shadow-x'])!=0||parseInt(element['shadow-y'])!=0)&& parseFloat(element['shadow-opacity'])>0) {
+						ak.context_mask.shadowOffsetX= parseInt(element['shadow-x']);//用来设定阴影在 X轴的延伸距
+						ak.context_mask.shadowOffsetY= parseInt(element['shadow-y']);//用来设定阴影在 Y轴的延伸距
+						ak.context_mask.shadowBlur = parseInt(element['shadow-blur']);//设定阴影的模糊程度 默认0
+						ak.context_mask.shadowColor = ak.set16ToRgba(element['shadow-color'],element['shadow-opacity']);//设定阴影颜色效果
+					}
+				}
+				ak.context_mask.drawImage(
+					image, // 规定要使用的图像、画布或视频。
+					0, 0, image.width, image.height, //开始剪切的 x 坐标位置, 被剪切图像的高度
+					element.left, element.top,element.width ,element.height // 在画布上放置图像的 x 、y坐标位置。 // 要使用的图像的宽度、高度        
+				);
+				ak.context_mask.translate(element.left+element.width/2,element.top+element.height/2);
+				ak.context_mask.rotate(-parseFloat(element.rotate) * (Math.PI / 180));
+				ak.context_mask.translate(-(element.left+element.width/2), -(element.top+element.height/2));
+				
+				
+				ak.context.globalCompositeOperation = 'source-over';
+				if(element['mix-blend-mode']=='multiply')
+					ak.context.globalCompositeOperation = 'multiply';
+				if(element['mix-blend-mode']=='overlay')
+					ak.context.globalCompositeOperation = 'overlay';
+				
+				ak.context.drawImage(ak.canvas_mask, 0,0);
+			} else {
+				if(typeof element.image == 'undefined'){
+					await loadImg(element);
+				}
+				var image  = element.image;
+				ak.context.translate(element.left+element.width/2,element.top+element.height/2);
+				ak.context.rotate(parseFloat(element.rotate) * Math.PI / 180);
+				ak.context.translate(-(element.left+element.width/2), -(element.top+element.height/2));
+				ak.context.globalAlpha = element.opacity;
+				
+				
+				ak.context.globalCompositeOperation = 'source-over';
+				if(element['mix-blend-mode']=='multiply')
+					ak.context.globalCompositeOperation = 'multiply';
+				if(element['mix-blend-mode']=='overlay')
+					ak.context.globalCompositeOperation = 'overlay';
+				
+				ak.context.shadowOffsetX =0;
+				ak.context.shadowOffsetY =0;
+				ak.context.shadowBlur = 0;
+				if(element['type']=='img') {	
+					if((parseInt(element['shadow-x'])!=0||parseInt(element['shadow-y'])!=0)&& parseFloat(element['shadow-opacity'])>0) {
+						ak.context.shadowOffsetX= parseInt(element['shadow-x']);//用来设定阴影在 X轴的延伸距
+						ak.context.shadowOffsetY= parseInt(element['shadow-y']);//用来设定阴影在 Y轴的延伸距
+						ak.context.shadowBlur = parseInt(element['shadow-blur']);//设定阴影的模糊程度 默认0
+						ak.context.shadowColor = ak.set16ToRgba(element['shadow-color'],element['shadow-opacity']);//设定阴影颜色效果
+					}
+				}
+				ak.context.drawImage(
+					image, // 规定要使用的图像、画布或视频。
+					0, 0, image.width, image.height, //开始剪切的 x 坐标位置, 被剪切图像的高度
+					element.left, element.top,element.width ,element.height // 在画布上放置图像的 x 、y坐标位置。 // 要使用的图像的宽度、高度        
+				);
+				ak.context.translate(element.left+element.width/2,element.top+element.height/2);
+				ak.context.rotate(-parseFloat(element.rotate) * (Math.PI / 180));
+				ak.context.translate(-(element.left+element.width/2), -(element.top+element.height/2));
+			}
+		}
+		ak.box_render();
+	}
+</script>
+<script type="text/javascript">
+			/**
+* content base64格式数据
+* fileName 文件名
+*/
+function downloadFile(content, fileName) {
+    var base64ToBlob = function(code) {
+        let parts = code.split(';base64,');
+        let contentType = parts[0].split(':')[1];
+        let raw = window.atob(parts[1]);
+        let rawLength = raw.length;
+        let uInt8Array = new Uint8Array(rawLength);
+        for(let i = 0; i < rawLength; ++i) {
+            uInt8Array[i] = raw.charCodeAt(i);
+        }
+        return new Blob([uInt8Array], {
+            type: contentType
+        });
+    };
+    let aLink = document.createElement('a');
+    let blob = base64ToBlob(content); //new Blob([content]);
+    let evt = document.createEvent("HTMLEvents");
+    evt.initEvent("click", true, true); //initEvent 不加后两个参数在FF下会报错  事件类型，是否冒泡，是否阻止浏览器的默认行为
+    aLink.download = fileName;
+    aLink.href = URL.createObjectURL(blob);
+    aLink.click();
+};
+
+function popClose(){
+	var dom = document.querySelector('#popHtml');
+	if(dom)
+		dom.parentNode.removeChild(dom);
+}
+function popHtml(obj){
+	popClose();
+	var popDiv = document.createElement('div');
+	popDiv.id = 'popHtml';
+	popDiv.className ="pop-bottom";
+	var html = '<div class="pop-bg" style="position:fixed;top:0;bottom:0;right:0;width:100%;background-color:rgba(0,0,0,0.55);z-index:999;"></div>';
+	
+	
+	if(obj.align&&obj.align=='center') {
+	html += '<div class="pop-content" style="position:fixed;left:50%;top:50%;transform:translateX(-50%) translateY(-50%);width:80%;background-color:#fff;z-index:9999;padding:0px 0px 0px;-moz-box-sizing: border-box;-webkit-box-sizing: border-box;box-sizing: border-box;	border-radius:10px ;overflow:hidden;padding:8px 10px;">';
+	} else {
+		html += '<div class="pop-content" style="position:fixed;left:0;bottom:0;width:100%;background-color:#fff;z-index:9999;padding:0px 0px 0px;-moz-box-sizing: border-box;-webkit-box-sizing: border-box;box-sizing: border-box;	border-radius:10px 10px 0 0 ;overflow:hidden;padding:8px 10px;">';
+	}
+	html += '<img class="pop-close" src="https://zqmodule.oss-cn-hangzhou.aliyuncs.com/xiexinbao/images/close.png" onclick="popClose()" style="width:20px;height:20px;position:absolute;right:10px;top:10px;"/>';
+	
+	if(obj.title) {
+		html += '<div class="pop-title" style="padding: 10px;color:#000;font-size:14px;font-weight:bold;text-align:center;">'+obj.title+'</div>';
+	}
+	
+	html += '<div class="pop-body" style="padding:5px 0 5px;">';
+	html += obj.content;
+	if(obj.button&&obj.button.text) {
+		if(typeof obj.button.url =='undefined') {
+			html += '<a id="pop-btn-create" class="btn-create">'+obj.button.text+'</a>';
+		} else {
+			html += '<a target="_blank"  href="'+obj.button.url+'" id="pop-btn-create" class="btn-create">'+obj.button.text+'</a>';	
+		}
+	}
+	html += '</div></div>';
+	
+	popDiv.innerHTML = html;
+	document.body.appendChild(popDiv);
+	
+	
+	if(obj.button&&obj.button.click) {
+		document.querySelector('#pop-btn-create').addEventListener("click", function (e) {
+			
+			obj.button.click();
+		});
+	}
+}
+function popToast(obj){
+	closeToast();
+	var popDiv = document.createElement('div');
+	popDiv.id = 'popToast';
+	popDiv.className ="popToast";
+	var html = '';
+	obj.icon = obj.icon?obj.icon:'none';
+	var icon_url = 'https://zqmodule.oss-cn-hangzhou.aliyuncs.com/www/loading.gif';
+	if(obj.icon&&obj.icon=='success') {
+		icon_url = 'https://zqmodule.oss-cn-hangzhou.aliyuncs.com/xiexinbao/images/success.png';
+	}
+	if(obj.icon&&obj.icon=='error') {
+		icon_url = 'https://zqmodule.oss-cn-hangzhou.aliyuncs.com/www/error.png';
+	}
+	if(obj.icon&&obj.icon=='loading') {
+		icon_url = 'https://zqmodule.oss-cn-hangzhou.aliyuncs.com/www/loading.gif';
+	}
+	if(obj.icon&&obj.icon=='none') {
+	} else {
+		html += '<img class="pop-icon" src="'+icon_url+'" style="width:30px;"/>';
+	}
+	html += '<div class="popToast-title">'+obj.title+'</div>';
+	popDiv.innerHTML = html;
+	
+	document.body.appendChild(popDiv);
+	
+	setTimeout(function(){
+		var dom = document.getElementById('popToast');
+		if(dom) {
+			dom.parentNode.removeChild(dom);
+		}
+		if(obj.callback){obj.callback();}
+	},obj.timeout||2000);
+}
+
+function textToast(title){
+	var popDiv = document.getElementById('popToast');
+	if(popDiv){
+		var titleDiv = document.querySelector('.popToast-title');
+		titleDiv.innerHTML = title;
+	}
+}
+function closeToast(){
+	var dom = document.getElementById('popToast');
+	if(dom) {
+		dom.parentNode.removeChild(dom);
+	}
+}
+</script>
+<style>
+.pop-bottom{}
+.pop-bottom .pop-bg {
+	position:fixed;
+	top:0;
+	bottom:0;
+	right:0;
+	width:100%;
+	background-color:rgba(0,0,0,0.55);
+	z-index:999;
+}
+.pop-bottom .pop-content{
+	/*position:fixed;
+	left:0;
+	bottom:0;*/
+	width:100%;
+	background-color:#fff;
+	z-index:9999;
+	padding:0px 0px 0px;
+	-moz-box-sizing: border-box;
+	-webkit-box-sizing: border-box;
+	box-sizing: border-box;
+	border-radius:10px 10px 0 0 ;
+	overflow:hidden;
+}
+.pop-bottom .pop-body{
+	padding:5px;
+}
+.pop-bottom .pop-title{
+	padding: 10px;
+	color:#000;
+	font-size:14px;
+	font-weight:bold;
+	text-align:center;
+}
+.pop-bottom .pop-close{
+	width:20px;
+	height:20px;
+	position:absolute;
+	right:10px;
+	top:10px;
+}
+
+.pop-bottom .pop-field{
+	padding:8px 0px 8px 0px;
+	border-bottom:1px solid #ddd;
+	display: flex;
+	justify-content: space-between;
+	align-items:center;
+}
+.pop-bottom .pop-field label{
+	font-size:14px;
+}
+.pop-bottom .pop-field input{
+	border:none;
+	
+	height:26px;
+	line-height:26px;
+	font-size:14px;
+	flex:1;
+}
+.pop-bottom .pop-field textarea{
+	border:none;
+	height:60px;
+	line-height:26px;
+	font-size:14px;
+	flex:1;
+	background-color:#f4f4f4;
+}
+.pop-bottom .pop-field input:focus-visible {
+	outline-width:0px;
+}
+
+
+.pop-bottom .btn-create{
+	width: 94%;
+	height: 34px;
+	line-height:34px;
+	margin: 10px auto;
+	border-radius: 44rpx;
+	text-align: center;
+	line-height: 80rpx;
+	color: #fff;
+	background-color:#000; 
+	cursor:pointer;
+	font-size:12px;
+	border-radius:0px;
+	text-decoration:none;
+	display:block;
+}
+
+
+.pop-bottom  .btn-save{
+	width: 100%;
+	height: 34px;
+	line-height:34px;
+	margin: 0px auto 10px;
+	text-align: center;
+	color: #fff;
+	background-color:#000 ; 
+	cursor:pointer;
+	border-radius:0px;
+	font-size:12px;
+	border:none;
+}
+
+.pop-bottom .btn-saveing{
+	width: 100%;
+	height: 34px;
+	line-height:34px;
+	margin: 0px auto 10px;
+	text-align: center;
+	color: #fff;
+	background-color:#ddd ; 
+	cursor:pointer;
+	border-radius:0px;
+	font-size:12px;
+	border:none;
+}
+
+.popToast{
+	text-align: center;
+	position: fixed;
+	top:50%;
+	left: 50%;
+	z-index: 10000;
+	background:rgba(0,0,0,0.9);
+	padding:13px 20px;
+	transform:translate(-50%,-50%);
+	border-radius:8px;
+}
+.popToast-title{
+	margin-top:5px;
+	color:#fff;
+	font-size:13px;		
+}
+</style>
+<script>
+
+(function() {
+	var cswtj_id = '';
+	if (typeof localStorage == "object") {cswtj_id = localStorage.getItem('cswtj_id') || ''; }
+	var hm = document.createElement("script");
+	hm.src = "http://log.xiexinbao.com/cswtj.js?plat="+plat+"&w="+w+"&cswtj_id="+cswtj_id;
+	var s = document.getElementsByTagName("script")[0]; 
+	s.parentNode.insertBefore(hm, s);
+})();
+</script>
+</body>
+</html>
